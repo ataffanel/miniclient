@@ -12,23 +12,24 @@ RUN apt-get update && apt-get install -y \
     libwayland-dev \
     libgl-dev \
     libudev-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN apt-get update && apt-get install -y \
+    qtbase5-dev \
+    patchelf \
     file \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-RUN cargo install cargo-appimage
+# Install linuxdeploy and its Qt plugin
+RUN curl -fsSL -o /usr/local/bin/linuxdeploy \
+    https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage \
+    && chmod +x /usr/local/bin/linuxdeploy
 
-# Install appimagetool
-RUN curl -fsSL -o /usr/local/bin/appimagetool \
-    https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage \
-    && chmod +x /usr/local/bin/appimagetool
+RUN curl -fsSL -o /usr/local/bin/linuxdeploy-plugin-qt \
+    https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage \
+    && chmod +x /usr/local/bin/linuxdeploy-plugin-qt
 
-# appimagetool needs this in containers (no FUSE available)
+# AppImage tools need this in containers (no FUSE available)
 ENV APPIMAGE_EXTRACT_AND_RUN=1
 
 WORKDIR /src

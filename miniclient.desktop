@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Crazyflie Mini Client
+Exec=miniclient
+Icon=miniclient
+Categories=Utility;

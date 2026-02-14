@@ -5,7 +5,7 @@ edition = "2024"
 build = "build.rs"
 
 [dependencies]
-slint = { version = "1.15", default-features = false, features = ["std", "backend-winit", "renderer-femtovg", "compat-1-2"] }
+slint = "1.15"
 crazyflie-lib = "0.5"
 crazyflie-link = "0.4"
 tokio = { version = "1", features = ["rt-multi-thread"] }
@@ -14,43 +14,3 @@ gilrs = "0.11"
 
 [build-dependencies]
 slint-build = "1.15"
-
-[package.metadata.appimage]
-auto_link = true
-auto_link_exclude_list = [
-    # Core system libs (must match host kernel/libc)
-    "libc.so*",
-    "libdl.so*",
-    "libpthread.so*",
-    "libm.so*",
-    "librt.so*",
-    "ld-linux*.so*",
-    "linux-vdso.so*",
-    # GPU/OpenGL stack (must match host GPU drivers)
-    "libGL.so*",
-    "libGLX.so*",
-    "libGLdispatch.so*",
-    "libEGL.so*",
-    "libGLESv2.so*",
-    "libdrm.so*",
-    "libgbm.so*",
-    "libvulkan.so*",
-    # X11/Wayland display server (must match host)
-    "libX11.so*",
-    "libX11-xcb.so*",
-    "libxcb.so*",
-    "libxcb-*.so*",
-    "libXext.so*",
-    "libXau.so*",
-    "libXdmcp.so*",
-    "libXi.so*",
-    "libXcursor.so*",
-    "libXrandr.so*",
-    "libXrender.so*",
-    "libXfixes.so*",
-    "libXinerama.so*",
-    "libwayland-client.so*",
-    "libwayland-cursor.so*",
-    "libwayland-egl.so*",
-    "libwayland-server.so*",
-]

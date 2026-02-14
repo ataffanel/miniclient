@@ -1,1 +1,4 @@
 /target
+/AppDir/
+*.AppImage
+miniclient.png
