@@ -20,13 +20,15 @@ RUN apt-get update && apt-get install -y \
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-# Install linuxdeploy and its Qt plugin
-RUN curl -fsSL -o /usr/local/bin/linuxdeploy \
-    https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage \
+# Install linuxdeploy and its Qt plugin (architecture-specific)
+RUN ARCH=$(uname -m) && \
+    curl -fsSL -o /usr/local/bin/linuxdeploy \
+    "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-${ARCH}.AppImage" \
     && chmod +x /usr/local/bin/linuxdeploy
 
-RUN curl -fsSL -o /usr/local/bin/linuxdeploy-plugin-qt \
-    https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage \
+RUN ARCH=$(uname -m) && \
+    curl -fsSL -o /usr/local/bin/linuxdeploy-plugin-qt \
+    "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-${ARCH}.AppImage" \
     && chmod +x /usr/local/bin/linuxdeploy-plugin-qt
 
 # AppImage tools need this in containers (no FUSE available)
