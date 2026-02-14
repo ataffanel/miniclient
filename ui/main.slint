@@ -1,0 +1,157 @@
+import { Button, LineEdit, ComboBox, CheckBox, GridBox, HorizontalBox, VerticalBox, GroupBox } from "std-widgets.slint";
+
+export component MainWindow inherits Window {
+    title: "Crazyflie Mini Client";
+    preferred-width: 480px;
+    preferred-height: 280px;
+
+    in-out property <string> uri: "radio://0/80/2M/E7E7E7E7E7";
+    in-out property <bool> connected: false;
+    in-out property <string> status-text: "Disconnected";
+    in-out property <[string]> gamepad-list: ["No gamepad detected"];
+    in-out property <int> gamepad-index: 0;
+    in-out property <bool> gamepad-enabled: false;
+
+    in-out property <float> roll-setpoint: 0;
+    in-out property <float> pitch-setpoint: 0;
+    in-out property <float> yaw-setpoint: 0;
+    in-out property <float> roll-state: 0;
+    in-out property <float> pitch-state: 0;
+    in-out property <float> yaw-state: 0;
+
+    callback connect-clicked();
+    callback gamepad-selected(string);
+    callback gamepad-enable-changed(bool);
+
+    VerticalBox {
+        // Connection bar
+        HorizontalBox {
+            uri-input := LineEdit {
+                text: uri;
+                placeholder-text: "radio://0/80/2M/E7E7E7E7E7";
+                horizontal-stretch: 1;
+                edited(text) => {
+                    uri = text;
+                }
+            }
+            connect-button := Button {
+                text: root.connected ? "Disconnect" : "Connect";
+                clicked => {
+                    root.connect-clicked();
+                }
+            }
+            Text {
+                text: root.status-text;
+                vertical-alignment: center;
+                color: root.connected ? #228b22 : #666666;
+            }
+        }
+
+        // Separator
+        Rectangle {
+            height: 1px;
+            background: #cccccc;
+        }
+
+        // Gamepad section
+        HorizontalBox {
+            alignment: stretch;
+            Text {
+                text: "Gamepad";
+                vertical-alignment: center;
+            }
+            ComboBox {
+                model: root.gamepad-list;
+                current-index: root.gamepad-index;
+                horizontal-stretch: 1;
+                selected(value) => {
+                    root.gamepad-selected(value);
+                }
+            }
+            CheckBox {
+                text: "Enable";
+                checked: root.gamepad-enabled;
+                toggled => {
+                    root.gamepad-enable-changed(self.checked);
+                }
+            }
+        }
+
+        // Separator
+        Rectangle {
+            height: 1px;
+            background: #cccccc;
+        }
+
+        // Flight data header and rows
+        GridBox {
+            vertical-stretch: 1;
+
+            // Header row
+            Row {
+                Rectangle {}
+                Text {
+                    text: "Setpoint";
+                    font-weight: 700;
+                    horizontal-alignment: center;
+                }
+                Text {
+                    text: "State";
+                    font-weight: 700;
+                    horizontal-alignment: center;
+                }
+            }
+
+            Row {
+                Text {
+                    text: "Roll";
+                    vertical-alignment: center;
+                }
+                Text {
+                    text: round(root.roll-setpoint * 10) / 10;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+                Text {
+                    text: round(root.roll-state * 10) / 10;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+            }
+
+            Row {
+                Text {
+                    text: "Pitch";
+                    vertical-alignment: center;
+                }
+                Text {
+                    text: round(root.pitch-setpoint * 10) / 10;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+                Text {
+                    text: round(root.pitch-state * 10) / 10;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+            }
+
+            Row {
+                Text {
+                    text: "Yaw";
+                    vertical-alignment: center;
+                }
+                Text {
+                    text: round(root.yaw-setpoint * 10) / 10;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+                Text {
+                    text: round(root.yaw-state * 10) / 10;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+            }
+        }
+    }
+}
