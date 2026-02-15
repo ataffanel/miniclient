@@ -23,3 +23,11 @@ slint-build = "1.15"
 winresource = "0.1"
 image = { version = "0.25", default-features = false, features = ["png"] }
 ico = "0.5.0"
+
+[package.metadata.bundle]
+name = "Crazyflie Mini Client"
+identifier = "se.bitcraze.miniclient"
+icon = ["icon.png"]
+category = "public.app-category.utilities"
+short_description = "Minimal Crazyflie client for gamepad-based flight control"
+copyright = "Copyright (c) Arnaud Taffanel"

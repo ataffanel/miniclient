@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "[0-9]*.[0-9]*.[0-9]*"
+      - "[0-9]*.[0-9]*.[0-9]*-*"
 
 permissions:
   contents: write
@@ -38,8 +39,98 @@ jobs:
       - name: Build MSI
         run: cargo wix --no-build --nocapture
 
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-msi
+          path: target/wix/*.msi
+
+  build-macos:
+    name: Build macOS DMG (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - arch: x86_64
+            runner: macos-13
+          - arch: arm64
+            runner: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build artifacts
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install cargo-bundle
+        run: cargo install cargo-bundle
+
+      - name: Build .app bundle
+        run: cargo bundle --release
+
+      - name: Build DMG
+        run: |
+          pipx run dmgbuild -s packaging/dmgsettings.py "Crazyflie Mini Client" "Crazyflie Mini Client-macos-${{ matrix.arch }}.dmg"
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-dmg-${{ matrix.arch }}
+          path: "*.dmg"
+
+  build-linux:
+    name: Build Linux AppImage (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-24.04
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build container image
+        run: docker build -t miniclient-builder -f packaging/Containerfile .
+
+      - name: Build AppImage
+        run: |
+          docker run --rm -v "$PWD:/src:Z" miniclient-builder bash -c "
+            cargo build --release &&
+            cp icon.png miniclient.png &&
+            QMAKE=qmake linuxdeploy \
+              --appdir AppDir \
+              --executable target/release/miniclient \
+              --desktop-file packaging/miniclient.desktop \
+              --icon-file miniclient.png \
+              --plugin qt \
+              --output appimage
+          "
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-appimage-${{ matrix.arch }}
+          path: "*.AppImage"
+
+  release:
+    name: Create GitHub Release
+    needs: [build-windows, build-macos, build-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: target/wix/*.msi
+          files: |
+            *.msi
+            *.dmg
+            *.AppImage
           generate_release_notes: true

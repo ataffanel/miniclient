@@ -3,3 +3,5 @@
 *.AppImage
 miniclient.png
 /wix/app.ico
+*.dmg
+.claude
