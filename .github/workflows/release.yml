@@ -100,19 +100,55 @@ jobs:
       - name: Build .app bundle
         run: cargo bundle --release
 
-      - name: Sign .app bundle
+      - name: Bundle libusb into .app and sign
         env:
           SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
         run: |
           APP_PATH=$(find target/release/bundle/osx -name "*.app" | head -1)
-          # Sign all executables and libraries inside the bundle, then the bundle itself
-          find "$APP_PATH" -type f \( -name "*.dylib" -o -name "*.so" -o -perm +111 \) | while read f; do
+          BINARY="$APP_PATH/Contents/MacOS/miniclient"
+          FRAMEWORKS="$APP_PATH/Contents/Frameworks"
+          mkdir -p "$FRAMEWORKS"
+
+          # Find libusb on the runner (installed by Homebrew)
+          LIBUSB_SRC=$(brew --prefix libusb)/lib/libusb-1.0.0.dylib
+
+          # Copy it into the bundle
+          cp "$LIBUSB_SRC" "$FRAMEWORKS/libusb-1.0.0.dylib"
+
+          # Find the load path the binary currently uses for libusb
+          OLD_PATH=$(otool -L "$BINARY" | awk '/libusb/{print $1}')
+
+          # Rewrite the binary to load libusb from @executable_path/../Frameworks/
+          install_name_tool \
+            -change "$OLD_PATH" \
+            "@executable_path/../Frameworks/libusb-1.0.0.dylib" \
+            "$BINARY"
+
+          # Also fix the identity name inside the dylib itself
+          install_name_tool \
+            -id "@executable_path/../Frameworks/libusb-1.0.0.dylib" \
+            "$FRAMEWORKS/libusb-1.0.0.dylib"
+
+          # Sign the bundled dylib with our identity (Team ID must match the binary)
+          codesign --force --options runtime \
+            --sign "$SIGNING_IDENTITY" \
+            "$FRAMEWORKS/libusb-1.0.0.dylib"
+
+          # Sign any other dylibs/so files found in the bundle
+          find "$APP_PATH" -type f \( -name "*.dylib" -o -name "*.so" \) \
+            ! -path "*/Frameworks/libusb*" | while read f; do
             codesign --force --options runtime --sign "$SIGNING_IDENTITY" "$f"
           done
+
+          # Sign the whole bundle
           codesign --force --deep --options runtime \
             --sign "$SIGNING_IDENTITY" \
             --entitlements packaging/entitlements.plist \
             "$APP_PATH"
+
+          # Verify
+          codesign --verify --deep --strict "$APP_PATH"
+          echo "Signed successfully: $APP_PATH"
 
       - name: Build DMG
         run: |
