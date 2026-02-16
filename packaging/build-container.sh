@@ -15,8 +15,9 @@ $CONTAINER_ENGINE run --rm -v "$PWD:/src:Z" miniclient-builder bash -c "
         --executable target/release/miniclient \
         --desktop-file packaging/miniclient.desktop \
         --icon-file miniclient.png \
-        --plugin qt \
-        --output appimage
+        --plugin qt &&
+    echo 'export XDG_DATA_DIRS=\"\${APPDIR}/usr/share\"' >> AppDir/apprun-hooks/linuxdeploy-plugin-qt-hook.sh &&
+    ARCH=\$(uname -m) appimagetool AppDir/
 "
 
 echo "Done!"

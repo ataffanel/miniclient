@@ -210,8 +210,9 @@ jobs:
               --executable target/release/miniclient \
               --desktop-file packaging/miniclient.desktop \
               --icon-file miniclient.png \
-              --plugin qt \
-              --output appimage
+              --plugin qt &&
+            echo 'export XDG_DATA_DIRS=\"\${APPDIR}/usr/share\"' >> AppDir/apprun-hooks/linuxdeploy-plugin-qt-hook.sh &&
+            ARCH=\$(uname -m) appimagetool AppDir/
           "
 
       - name: Upload Linux artifacts

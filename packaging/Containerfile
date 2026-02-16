@@ -31,6 +31,11 @@ RUN ARCH=$(uname -m) && \
     "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-${ARCH}.AppImage" \
     && chmod +x /usr/local/bin/linuxdeploy-plugin-qt
 
+RUN ARCH=$(uname -m) && \
+    curl -fsSL -o /usr/local/bin/appimagetool \
+    "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-${ARCH}.AppImage" \
+    && chmod +x /usr/local/bin/appimagetool
+
 # AppImage tools need this in containers (no FUSE available)
 ENV APPIMAGE_EXTRACT_AND_RUN=1
 
