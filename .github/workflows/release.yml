@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   build-windows:
@@ -36,8 +37,38 @@ jobs:
       - name: Build release binary
         run: cargo build --release
 
+      - name: Sign executable with Azure Trusted Signing
+        uses: azure/trusted-signing-action@v0.5.0
+        with:
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
+          trusted-signing-account-name: ${{ secrets.AZURE_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ secrets.AZURE_CERTIFICATE_PROFILE }}
+          files-folder: ${{ github.workspace }}/target/release
+          files-folder-filter: exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
       - name: Build MSI
         run: cargo wix --no-build --nocapture
+
+      - name: Sign MSI with Azure Trusted Signing
+        uses: azure/trusted-signing-action@v0.5.0
+        with:
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
+          trusted-signing-account-name: ${{ secrets.AZURE_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ secrets.AZURE_CERTIFICATE_PROFILE }}
+          files-folder: ${{ github.workspace }}/target/wix
+          files-folder-filter: msi
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
