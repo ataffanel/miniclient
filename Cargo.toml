@@ -9,7 +9,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/ataffanel/miniclient"
 
 [dependencies]
-slint = "1.15"
+slint = { version= "1.15", default-features = false, features=["std", "compat-1-2", "backend-winit", "renderer-femtovg", "renderer-software", "accessibility"] }
 crazyflie-lib = "0.5"
 crazyflie-link = "0.4"
 tokio = { version = "1", features = ["rt-multi-thread"] }

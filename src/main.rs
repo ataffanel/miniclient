@@ -1,4 +1,4 @@
-#![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
+//#![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
 
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
@@ -423,5 +423,21 @@ fn main() {
         }
     });
 
-    ui.run().unwrap();
+    if let Err(e) = ui.run() {
+        // If a renderer was already explicitly requested, don't retry
+        if std::env::var("SLINT_BACKEND").is_ok() {
+            panic!("UI failed with explicit backend: {e}");
+        }
+        // Renderer initialisation failed (likely no OpenGL); restart with the
+        // software renderer.  The child process picks up SLINT_BACKEND and
+        // will panic on any further error rather than looping.
+        eprintln!("Renderer failed ({e}), falling back to software renderer");
+        let exe = std::env::current_exe().expect("Failed to get current exe path");
+        let status = std::process::Command::new(exe)
+            .args(std::env::args_os().skip(1))
+            .env("SLINT_BACKEND", "winit-software")
+            .status()
+            .expect("Failed to restart with software renderer");
+        std::process::exit(status.code().unwrap_or(0));
+    }
 }
